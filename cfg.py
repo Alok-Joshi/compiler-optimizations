@@ -1,5 +1,5 @@
 import json
-
+import sys
 
 class block:
     def __init__(self, block_name, block_list):
@@ -13,12 +13,12 @@ class control_flow_graph:
         self.cfg = dict()
         self._program = json.load(program)
 
-        self.blocks = self._get_block(self._program[0])
+        self.blocks = self._get_blocks(self._program[0])
         self.block_lookup = dict()
         #for now, only one function has been supported
         pass
 
-    def _get_block(self, function):
+    def _get_blocks(self, function):
 
         blocks = list()
         block_list = list()
@@ -35,12 +35,13 @@ class control_flow_graph:
             elif ("label" in itr) or (itr["op"] == "jmp") or ( itr["op"] == "br"):
 
                 
-                new_block = block(current_label,block_list)
-                self.block_lookup[current_label] = new_block
-                blocks.append(new_block)
+                if len(block_list) > 0: 
+                    new_block = block(current_label,block_list)
+                    self.block_lookup[current_label] = new_block
+                    blocks.append(new_block)
 
-                block_counter += 1
-                block_list = list()
+                    block_counter += 1
+                    block_list = list()
 
                 if("label" in itr):
                     current_label = itr["label"]
@@ -77,4 +78,7 @@ class control_flow_graph:
 
 
 
+if(__name__ == "__main__"):
+
+    cfg = control_flow_graph(sys.stdin)
 
