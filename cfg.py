@@ -16,13 +16,13 @@ class block:
 
 class control_flow_graph:
 
-    def __init__(self, program):
+    def __init__(self, function):
 
-        self.cfg = dict()
-        self._program = json.load(program)
-        self.block_lookup = dict()
+        self.cfg: dict[str,str] = dict()
+        self._function = function
+        self.block_lookup: dict[str,block] = dict()
 
-        self.blocks = self._get_blocks(self._program["functions"][0])
+        self.blocks = self._get_blocks(self._function)
         self._generate_cfg()
         pass
 
@@ -34,13 +34,16 @@ class control_flow_graph:
         current_label = "section"+str(block_counter)
 
         instructions = function["instrs"]
+        control_instructions = ["jmp","br","ret"]
+        #call is not a terminator, as we return back to the basic block after the call is done
+
 
         for itr in instructions:
 
             if("op" in itr):
                 block_list.append(itr)
 
-            elif ("label" in itr) or (itr["op"] == "jmp") or ( itr["op"] == "br"):
+            if ("label" in itr) or (itr["op"] in control_instructions):
 
                 
                 if len(block_list) > 0: 
@@ -67,10 +70,23 @@ class control_flow_graph:
 
 
 
-    def print_blocks(self):
+
+    def export(self):
+        print('digraph {} {{'.format(self._function["name"]))
 
         for block in self.blocks:
-            print(block)
+            print('  {};'.format(block.block_name))
+
+        for label in self.blocks:
+
+            children = self.cfg[label.block_name]
+
+            for node in children:
+                print('  {} -> {};'.format(label.block_name,node))
+        
+            
+        print('}')
+
 
     def _generate_cfg(self):
 
@@ -82,13 +98,17 @@ class control_flow_graph:
 
             if(last_instruction["op"] == "jmp" or last_instruction["op"] == "br"): #checking for terminator instructions
 
-                for label in last_instruction["labels"]:
-                    self.cfg[block_obj.block_name].append(label)
+                    self.cfg[block_obj.block_name] = last_instruction["labels"]
+
+            
+            elif(last_instruction["op"] == "ret"):
+                    self.cfg[block_obj.block_name] = []    
+
 
             elif i != len(self.blocks) -1:
                 #just link it to the next block
 
-                self.cfg[block_obj.block_name] = self.blocks[i+1].block_name
+                self.cfg[block_obj.block_name] = [self.blocks[i+1].block_name,]
 
 
 
@@ -100,8 +120,10 @@ class control_flow_graph:
 if(__name__ == "__main__"):
 
 
-    cfg = control_flow_graph(sys.stdin)
 
-    print(cfg.cfg)
-    cfg.print_blocks()
+    program = json.load(sys.stdin)
+    for function in program["functions"]:
+        
+        cfg = control_flow_graph(function)
+        cfg.export()
 
