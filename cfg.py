@@ -1,10 +1,21 @@
 import json
 import sys
 
+
+
+def add_pred(node_name,blocks,pred_name):
+
+    for block in blocks:
+        if(block.block_name == node_name):
+            block.pred.append(pred_name)
+            break
+
 class block:
     def __init__(self, block_name, block_list):
         self.block_name = block_name
         self.block_list = block_list
+        self.pred = list()
+        self.succ = list()
 
     def __str__(self):
 
@@ -98,6 +109,13 @@ class control_flow_graph:
             if(last_instruction["op"] == "jmp" or last_instruction["op"] == "br"): #checking for terminator instructions
 
                     self.cfg[block_obj.block_name] = last_instruction["labels"]
+                    block_obj.succ.extend(last_instruction["labels"]) #for the successors
+
+                    #now the predecessors
+
+                    for label in last_instruction['labels']:
+                        add_pred(label,self.blocks,block_obj.block_name)
+                        
 
             
             elif(last_instruction["op"] == "ret"):
@@ -108,6 +126,8 @@ class control_flow_graph:
                 #just link it to the next block
 
                 self.cfg[block_obj.block_name] = [self.blocks[i+1].block_name,]
+                block_obj.succ.append(self.blocks[i+1].block_name)
+                add_pred(self.blocks[i+1].block_name,self.blocks,block_obj.block_name)
 
 
 
