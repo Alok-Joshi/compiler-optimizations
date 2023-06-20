@@ -24,7 +24,6 @@ class control_flow_graph:
 
         self.blocks = self._get_blocks(self._function)
         self._generate_cfg()
-        pass
 
     def _get_blocks(self, function):
 

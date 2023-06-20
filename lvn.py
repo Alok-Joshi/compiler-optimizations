@@ -1,5 +1,6 @@
 import json
-
+import sys
+from cfg import block, control_flow_graph
 
 
 def get_value(instruction,environment):
@@ -7,7 +8,7 @@ def get_value(instruction,environment):
     
         if(instruction["op"] == "const"):
 
-            value  = ("const",instruction["args"][0])
+            value  = ("const",instruction["value"])
             return value
 
         else:
@@ -62,7 +63,8 @@ def local_value_numbering(block):
                 environment[itr["dest"]] = len(table)-1 # pointing the variable to the latest entry, the new value
 
                 #instruction reconstruction
-                itr["args"] = [table[environment[arg]][1] for arg in itr["args"]]
+                if("args" in itr):
+                    itr["args"] = [table[environment[arg]][1] for arg in itr["args"]]
                 #replacing the variables with their canonical homes
 
 
@@ -75,6 +77,27 @@ def local_value_numbering(block):
                 
 
 
+
+
+
+if(__name__ == "__main__"):
+
+    program = json.load(sys.stdin)
+    for function in program["functions"]:
+        
+        cfg = control_flow_graph(function)
+
+        for block in cfg.blocks:
+
+            for itr in block.block_list:
+                print(itr)
+            local_value_numbering(block.block_list)
+            print("after value numbering:")
+
+            for itr in block.block_list:
+                print(itr)
+
+            print("\n")
 
 
 
