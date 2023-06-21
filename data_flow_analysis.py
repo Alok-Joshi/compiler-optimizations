@@ -21,6 +21,35 @@ def merge(preds: list[str] ):
     return new_in_value
 
 
+def get_value(instruction):
+
+    result = [instruction["op"],]
+
+    if instruction["op"] == "const":
+        result.append(instruction["value"])
+    else:
+        result.extend(instruction["args"])
+
+    return tuple(result);
+
+    
+
+def is_redefinition(variable_name, in_value):
+
+    for definition in in_value:
+        if definition[0] == variable_name:
+            return True;
+
+    return False
+
+def remove_definition(variable_name, in_value):
+
+    for definition in in_value:
+        if definition[0] == variable_name:
+            in_value.remove(definition)
+
+            return
+
 
 def transfer(in_value,block):
     """ generates out value """
@@ -29,10 +58,10 @@ def transfer(in_value,block):
     for itr in block.block_list:
 
         if "dest" in itr:
-            if(itr["dest"] in out_value):
-                out_value.remove(itr["dest"]) #implies this is a kill, its a redefinition
-            else:
-                out_value.add(itr["dest"]) #implies this is a new definition
+            if(is_redefinition(itr["dest"],out_value)):
+                remove_definition(itr["dest"],out_value)
+
+            out_value.add((itr["dest"],get_value(itr)))
 
     return out_value
 
@@ -58,7 +87,6 @@ def reaching_definitions(cfg:control_flow_graph):
 
         
 
-    
 
 if __name__ == "__main__":
 
